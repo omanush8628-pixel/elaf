@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Helvetica Neue", Arial, sans-serif;
+  --color-gold: #D4AF37;
+  --color-gold-dark: #B8860B;
+  --color-gold-light: #FDF5E6;
+  --color-text-dark: #2D3436;
+  --color-text-muted: #636E72;
+}
+
+body {
+  @apply font-sans text-text-dark bg-white;
+}
