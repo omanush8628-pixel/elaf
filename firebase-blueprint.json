@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A product for sale in the e-commerce store",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Product name"
+        },
+        "category": {
+          "type": "string",
+          "description": "Product category"
+        },
+        "price": {
+          "type": "number",
+          "description": "Regular price"
+        },
+        "salePrice": {
+          "type": "number",
+          "description": "Discounted/sale price"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to the product image"
+        },
+        "description": {
+          "type": "string",
+          "description": "HTML description of the product"
+        }
+      },
+      "required": ["name", "category", "price", "salePrice", "imageUrl", "description"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "An order placed by a customer",
+      "type": "object",
+      "properties": {
+        "customerName": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "totalPrice": {
+          "type": "number"
+        },
+        "paymentMethod": {
+          "type": "string"
+        },
+        "transactionId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "cartItemsRaw": {
+          "type": "string",
+          "description": "JSON stringified array of cart items"
+        }
+      },
+      "required": ["customerName", "phone", "address", "timestamp", "totalPrice", "paymentMethod", "status", "cartItemsRaw"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": {
+        "$ref": "#/entities/Product"
+      },
+      "description": "Store products"
+    },
+    "/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/Order"
+      },
+      "description": "Customer orders"
+    }
+  }
+}

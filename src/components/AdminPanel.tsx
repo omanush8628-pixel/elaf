@@ -1,37 +1,95 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { Order, Product } from '../types';
+import { db, auth, googleProvider } from '../firebase';
+import { collection, onSnapshot, addDoc, updateDoc, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { handleFirestoreError, OperationType } from '../utils/firebaseErrorHandler';
+import { Link } from 'react-router-dom';
 
 export default function AdminPanel({ products, setProducts }: { products: Product[], setProducts: (products: Product[]) => void }) {
-  const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newProduct, setNewProduct] = useState<Partial<Product>>({ name: '', category: '', price: 0, salePrice: 0, imageUrl: '', description: '' });
-  const orders: Order[] = JSON.parse(localStorage.getItem('orders') || '[]');
 
-  if (!isAuthenticated) {
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, u => {
+      setUser(u);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'orders'), orderBy('timestamp', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedOrders: Order[] = [];
+      snapshot.forEach(d => {
+        const data = d.data();
+        let cartItems = [];
+        try {
+          cartItems = data.cartItemsRaw ? JSON.parse(data.cartItemsRaw) : [];
+        } catch(e) { }
+        fetchedOrders.push({ id: d.id, ...data, cartItems } as Order);
+      });
+      setOrders(fetchedOrders);
+    }, (error) => {
+      // It will throw permission denied if not admin, but that's expected if a random user logs in
+      console.warn("Order fetch err (might not be admin):", error);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch(err) {
+      console.error(err);
+      alert("Login attempt failed. Please make sure you open the website in a new tab if you are facing issues.");
+    }
+  };
+
+  const handleLogout = () => signOut(auth);
+
+  if (!user || user.isAnonymous) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="bg-white dark:bg-gray-800 p-8 rounded shadow-lg flex flex-col gap-4">
-          <input type="password" placeholder="Passcode" className="border p-2 rounded dark:bg-gray-700 dark:text-white" onChange={e => setPassword(e.target.value)} />
-          <button onClick={() => password === '1234' && setIsAuthenticated(true)} className="bg-gold text-white p-2 rounded font-bold hover:bg-gold-dark">Login</button>
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900 relative">
+        <Link to="/" className="absolute top-4 left-4 border p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white">&larr; Back to Home</Link>
+        <div className="bg-white dark:bg-gray-800 p-8 rounded shadow-lg flex flex-col gap-4 text-center max-w-sm">
+          <h2 className="text-xl font-bold dark:text-white">Admin Access</h2>
+          <p className="text-sm text-gray-500 mb-4">If clicking login redirects you out, please open this app in a <strong>New Tab</strong> first!</p>
+          <button onClick={handleLogin} className="bg-gold text-white p-2 rounded font-bold hover:bg-gold-dark">
+            Login with Google
+          </button>
         </div>
       </div>
     );
   }
 
-  const handleSaveProduct = () => {
-    let updatedProducts;
-    if (editingId) {
-      updatedProducts = products.map(p => p.id === editingId ? { ...p, ...newProduct } as Product : p);
-    } else {
-      updatedProducts = [...products, { ...newProduct, id: Date.now().toString() } as Product];
+  const handleSaveProduct = async () => {
+    try {
+      if (editingId) {
+        await updateDoc(doc(db, 'products', editingId), newProduct);
+      } else {
+        await addDoc(collection(db, 'products'), newProduct);
+      }
+      setNewProduct({ name: '', category: '', price: 0, salePrice: 0, imageUrl: '', description: '' });
+      setEditingId(null);
+    } catch (error) {
+      handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, 'products');
     }
-    setProducts(updatedProducts);
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-    setNewProduct({ name: '', category: '', price: 0, salePrice: 0, imageUrl: '', description: '' });
-    setEditingId(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if(window.confirm('Delete this product?')) {
+      try {
+        await deleteDoc(doc(db, 'products', id));
+      } catch(error) {
+        handleFirestoreError(error, OperationType.DELETE, 'products');
+      }
+    }
   };
 
   const handleEdit = (product: Product) => {
@@ -43,10 +101,43 @@ export default function AdminPanel({ products, setProducts }: { products: Produc
     setEditingId(null);
     setNewProduct({ name: '', category: '', price: 0, salePrice: 0, imageUrl: '', description: '' });
   };
+  
+  const handleRestoreLocalData = async () => {
+    const local = localStorage.getItem('products');
+    if (!local) return alert('No previously saved local products found.');
+    let parsed = [];
+    try { parsed = JSON.parse(local); } catch(e){}
+    if (!parsed.length) return alert('Local product list is empty.');
+    
+    if (!window.confirm(`Found ${parsed.length} previous products. Do you want to upload them to the connected database?`)) return;
+    
+    try {
+      for (const p of parsed) {
+         await setDoc(doc(db, 'products', p.id), p);
+      }
+      alert('Success! Restored products to your database.');
+    } catch(e) {
+      console.error(e);
+      alert('Error uploading to database. Make sure your account has admin rights.');
+    }
+  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto dark:text-gray-100">
-      <h1 className="text-3xl font-bold mb-8 text-gold">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gold">Admin Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <Link to="/" className="text-sm border px-3 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">Home</Link>
+          <span className="text-sm border px-2 py-1 rounded bg-gray-100 dark:bg-gray-800">{user.email}</span>
+          <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded font-bold hover:bg-red-600">Logout</button>
+        </div>
+      </div>
+      
+      <div className="mb-4 text-right">
+         <button onClick={handleRestoreLocalData} className="bg-blue-600 text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 text-sm">
+           Restore Previous Local Products
+         </button>
+      </div>
       
       <div className="mb-8 p-6 border rounded shadow-md bg-white dark:bg-gray-800 dark:border-gray-700">
         <h2 className="text-xl font-semibold mb-4">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
@@ -87,9 +178,12 @@ export default function AdminPanel({ products, setProducts }: { products: Produc
                     </div>
                   </td>
                   <td className="border dark:border-gray-600 p-3">৳{p.salePrice}</td>
-                  <td className="border dark:border-gray-600 p-3">
+                <td className="border dark:border-gray-600 p-3">
+                  <div className="flex gap-2">
                     <button onClick={() => handleEdit(p)} className="text-blue-500 hover:text-blue-700 font-bold px-3 py-1 border border-blue-500 rounded">Edit</button>
-                  </td>
+                    <button onClick={() => handleDelete(p.id)} className="text-red-500 hover:text-red-700 font-bold px-3 py-1 border border-red-500 rounded">Delete</button>
+                  </div>
+                </td>
                 </tr>
               ))}
             </tbody>

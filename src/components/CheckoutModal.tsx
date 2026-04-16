@@ -3,11 +3,12 @@ import { Product } from '../types';
 import { CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export default function CheckoutModal({ onClose, cartItems, onSubmit }: { onClose: () => void, cartItems: any[], onSubmit: (data: any) => Promise<void> }) {
+export default function CheckoutModal({ onClose, cartItems, onSubmit }: { onClose: () => void, cartItems: any[], onSubmit: (data: any) => Promise<string | undefined> }) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({ name: '', phone: '', address: '', paymentMethod: 'COD', transactionId: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [orderTrackingId, setOrderTrackingId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,11 +16,12 @@ export default function CheckoutModal({ onClose, cartItems, onSubmit }: { onClos
       setStep(2);
     } else {
       setIsProcessing(true);
-      await onSubmit(formData);
+      const id = await onSubmit(formData);
+      if (id) setOrderTrackingId(id);
       setSuccess(true);
       setTimeout(() => {
         onClose();
-      }, 3000);
+      }, 5000); // give them 5 seconds to copy the order id
     }
   };
 
@@ -30,6 +32,12 @@ export default function CheckoutModal({ onClose, cartItems, onSubmit }: { onClos
           <CheckCircle size={64} className="text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold dark:text-white mb-2">ধন্যবাদ!</h2>
           <p className="text-text-muted dark:text-gray-300">আপনার অর্ডারটি সফলভাবে সম্পন্ন হয়েছে। আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।</p>
+          {orderTrackingId && (
+            <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
+              <p className="text-sm text-gray-500 mb-1">Your Order / Tracking ID:</p>
+              <p className="font-bold text-gold tracking-widest">{orderTrackingId}</p>
+            </div>
+          )}
         </motion.div>
       </div>
     );
