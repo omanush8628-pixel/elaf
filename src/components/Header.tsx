@@ -37,12 +37,12 @@ export default function Header({ theme, toggleTheme }: { theme: 'light' | 'dark'
       {isMenuOpen && (
         <nav className="md:hidden bg-white border-b p-4 flex flex-col gap-2 text-sm font-medium text-text-dark uppercase tracking-wide dark:bg-gray-900 dark:text-white">
           <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
-          {CATEGORIES.map(cat => <Link key={cat} to={`/category/${cat.toLowerCase()}`} onClick={() => setIsMenuOpen(false)}>{cat}</Link>)}
+          {CATEGORIES.map(cat => <Link key={`mobile-${cat}`} to={`/category/${cat.toLowerCase()}`} onClick={() => setIsMenuOpen(false)}>{cat}</Link>)}
         </nav>
       )}
       <nav className="hidden md:flex max-w-7xl mx-auto px-4 pb-2 gap-4 text-sm font-medium text-text-dark uppercase tracking-wide dark:text-gray-300">
         <Link to="/" className="hover:text-gold">Home</Link>
-        {CATEGORIES.map(cat => <Link key={cat} to={`/category/${cat.toLowerCase()}`} className="hover:text-gold">{cat}</Link>)}
+        {CATEGORIES.map(cat => <Link key={`desktop-${cat}`} to={`/category/${cat.toLowerCase()}`} className="hover:text-gold">{cat}</Link>)}
       </nav>
     </header>
   );
