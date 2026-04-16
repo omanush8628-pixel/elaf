@@ -11,6 +11,7 @@ import TrackOrder from './components/TrackOrder';
 import AdminPanel from './components/AdminPanel';
 import StickyContactBar from './components/StickyContactBar';
 import RippleEffect from './components/RippleEffect';
+import Shop from './components/Shop';
 import { DUMMY_PRODUCTS } from './constants';
 import { Product, CartItem } from './types';
 
@@ -81,12 +82,13 @@ export default function App() {
           <Route path="*" element={
             <>
               <Header theme={theme} toggleTheme={toggleTheme} />
-              <button className="fixed top-4 right-20 bg-gold text-white px-4 py-2 rounded z-40" onClick={() => setIsCartOpen(true)}>Cart ({cart.length})</button>
-              <main className="flex-grow max-w-7xl mx-auto px-4 py-8">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                  {products.map(p => <ProductCard key={p.id} product={p} onOrder={() => setIsCheckoutOpen(true)} onAddToCart={addToCart} />)}
-                </motion.div>
-              </main>
+              <button className="fixed top-4 right-20 bg-gold text-white px-4 py-2 rounded z-40 transition-transform hover:scale-105 shadow-md" onClick={() => setIsCartOpen(true)}>Cart ({cart.length})</button>
+              
+              <Routes>
+                <Route path="/category/:categoryId" element={<Shop products={products} onAddToCart={addToCart} onOrder={() => setIsCheckoutOpen(true)} />} />
+                <Route path="/" element={<Shop products={products} onAddToCart={addToCart} onOrder={() => setIsCheckoutOpen(true)} />} />
+              </Routes>
+
               <Footer />
               <StickyContactBar />
               <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cart} onUpdateQuantity={updateCartQuantity} />
