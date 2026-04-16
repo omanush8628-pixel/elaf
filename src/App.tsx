@@ -12,6 +12,7 @@ import AdminPanel from './components/AdminPanel';
 import StickyContactBar from './components/StickyContactBar';
 import RippleEffect from './components/RippleEffect';
 import Shop from './components/Shop';
+import ProductDetail from './components/ProductDetail';
 import { Product, CartItem } from './types';
 import { db, auth } from './firebase';
 import { collection, onSnapshot, addDoc, doc, getDoc, getDocs } from 'firebase/firestore';
@@ -155,6 +156,7 @@ export default function App() {
               
               <Routes>
                 <Route path="/category/:categoryId" element={<Shop products={displayProducts} onAddToCart={addToCart} onOrder={() => setIsCheckoutOpen(true)} />} />
+                <Route path="/product/:productId" element={<ProductDetail products={displayProducts} onAddToCart={addToCart} />} />
                 <Route path="/" element={<Shop products={displayProducts} onAddToCart={addToCart} onOrder={() => setIsCheckoutOpen(true)} />} />
               </Routes>
 
