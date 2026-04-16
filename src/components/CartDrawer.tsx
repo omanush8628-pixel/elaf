@@ -7,14 +7,14 @@ export default function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantit
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50">
-      <div className="w-full max-w-sm bg-white p-6 shadow-lg">
+      <div className="w-full max-w-sm bg-white dark:bg-gray-900 dark:text-gray-100 p-6 shadow-lg transition-colors duration-300">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Your Cart</h2>
           <button onClick={onClose}><X /></button>
         </div>
         <div className="space-y-4 mb-6">
           {cartItems.map(item => (
-            <div key={item.product.id} className="flex justify-between items-center border-b pb-2">
+            <div key={item.product.id} className="flex justify-between items-center border-b dark:border-gray-700 pb-2">
               <span>{item.product.name}</span>
               <div className="flex items-center gap-2">
                 <button onClick={() => onUpdateQuantity(item.product.id, -1)}><Minus size={16} /></button>

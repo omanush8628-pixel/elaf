@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import emailjs from 'emailjs-com';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,7 +9,7 @@ import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
 import TrackOrder from './components/TrackOrder';
 import AdminPanel from './components/AdminPanel';
-import WhatsAppButton from './components/WhatsAppButton';
+import StickyContactBar from './components/StickyContactBar';
 import RippleEffect from './components/RippleEffect';
 import { DUMMY_PRODUCTS } from './constants';
 import { Product, CartItem } from './types';
@@ -19,7 +19,13 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -53,21 +59,21 @@ export default function App() {
   return (
     <BrowserRouter>
       <RippleEffect />
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950 transition-colors duration-300">
         <Routes>
           <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/track" element={<><Header onSearch={setSearchQuery} /><TrackOrder /><Footer /></>} />
+          <Route path="/track" element={<><Header theme={theme} toggleTheme={toggleTheme} /><TrackOrder /><Footer /></>} />
           <Route path="*" element={
             <>
-              <Header onSearch={setSearchQuery} />
-              <button className="fixed top-4 right-20 bg-gold text-white px-4 py-2 rounded" onClick={() => setIsCartOpen(true)}>Cart ({cart.length})</button>
+              <Header theme={theme} toggleTheme={toggleTheme} />
+              <button className="fixed top-4 right-20 bg-gold text-white px-4 py-2 rounded z-40" onClick={() => setIsCartOpen(true)}>Cart ({cart.length})</button>
               <main className="flex-grow max-w-7xl mx-auto px-4 py-8">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(p => <ProductCard key={p.id} product={p} onOrder={() => setIsCheckoutOpen(true)} onAddToCart={addToCart} />)}
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                  {products.map(p => <ProductCard key={p.id} product={p} onOrder={() => setIsCheckoutOpen(true)} onAddToCart={addToCart} />)}
                 </motion.div>
               </main>
               <Footer />
-              <WhatsAppButton />
+              <StickyContactBar />
               <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cart} onUpdateQuantity={updateCartQuantity} />
               {isCheckoutOpen && <CheckoutModal onClose={() => setIsCheckoutOpen(false)} cartItems={cart} onSubmit={handleOrderSubmit} />}
             </>
