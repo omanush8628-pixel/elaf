@@ -3,10 +3,9 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { Order, Product } from '../types';
 
-export default function AdminPanel() {
+export default function AdminPanel({ products, setProducts }: { products: Product[], setProducts: (products: Product[]) => void }) {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [products, setProducts] = useState<Product[]>(JSON.parse(localStorage.getItem('products') || '[]'));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newProduct, setNewProduct] = useState<Partial<Product>>({ name: '', category: '', price: 0, salePrice: 0, imageUrl: '', description: '' });
   const orders: Order[] = JSON.parse(localStorage.getItem('orders') || '[]');
@@ -51,17 +50,17 @@ export default function AdminPanel() {
       
       <div className="mb-8 p-6 border rounded shadow-md bg-white dark:bg-gray-800 dark:border-gray-700">
         <h2 className="text-xl font-semibold mb-4">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <input type="text" placeholder="Name" value={newProduct.name} className="border p-2 w-full rounded dark:bg-gray-700 dark:border-gray-600" onChange={e => setNewProduct({...newProduct, name: e.target.value})} />
           <input type="text" placeholder="Category" value={newProduct.category} className="border p-2 w-full rounded dark:bg-gray-700 dark:border-gray-600" onChange={e => setNewProduct({...newProduct, category: e.target.value})} />
           <input type="number" placeholder="Regular Price" value={newProduct.price || ''} className="border p-2 w-full rounded dark:bg-gray-700 dark:border-gray-600" onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})} />
           <input type="number" placeholder="Sale Price" value={newProduct.salePrice || ''} className="border p-2 w-full rounded dark:bg-gray-700 dark:border-gray-600" onChange={e => setNewProduct({...newProduct, salePrice: Number(e.target.value)})} />
-          <input type="text" placeholder="Image URL" value={newProduct.imageUrl} className="border p-2 w-full rounded col-span-2 dark:bg-gray-700 dark:border-gray-600" onChange={e => setNewProduct({...newProduct, imageUrl: e.target.value})} />
+          <input type="text" placeholder="Image URL" value={newProduct.imageUrl} className="border p-2 w-full rounded sm:col-span-2 dark:bg-gray-700 dark:border-gray-600" onChange={e => setNewProduct({...newProduct, imageUrl: e.target.value})} />
         </div>
         <div className="mb-12">
           <ReactQuill theme="snow" value={newProduct.description} onChange={val => setNewProduct({...newProduct, description: val})} className="h-40 text-black bg-white" />
         </div>
-        <div className="flex gap-4 mt-6">
+        <div className="flex flex-col sm:flex-row gap-4 mt-6">
           <button onClick={handleSaveProduct} className="bg-gold text-white px-6 py-2 rounded font-bold hover:bg-gold-dark">{editingId ? 'Update Product' : 'Add Product'}</button>
           {editingId && <button onClick={handleCancelEdit} className="bg-gray-300 text-gray-800 px-6 py-2 rounded font-bold hover:bg-gray-400">Cancel</button>}
         </div>

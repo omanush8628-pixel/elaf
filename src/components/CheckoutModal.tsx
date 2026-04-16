@@ -61,7 +61,7 @@ export default function CheckoutModal({ onClose, cartItems, onSubmit }: { onClos
               )}
             </>
           )}
-          <div className="flex gap-4 mt-6">
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <button type="button" onClick={onClose} disabled={isProcessing} className="flex-1 bg-gray-200 dark:bg-gray-800 py-2 rounded font-medium disabled:opacity-50">Cancel</button>
             <button type="submit" disabled={isProcessing} className="flex-1 bg-gold text-white py-2 rounded font-bold disabled:opacity-50 flex justify-center items-center">
               {isProcessing ? 'Processing...' : step === 1 ? 'Next' : 'Confirm Order'}

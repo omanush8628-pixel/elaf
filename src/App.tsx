@@ -15,7 +15,10 @@ import { DUMMY_PRODUCTS } from './constants';
 import { Product, CartItem } from './types';
 
 export default function App() {
-  const [products] = useState<Product[]>(DUMMY_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('products');
+    return saved && JSON.parse(saved).length > 0 ? JSON.parse(saved) : DUMMY_PRODUCTS;
+  });
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -73,14 +76,14 @@ export default function App() {
       <RippleEffect />
       <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950 transition-colors duration-300">
         <Routes>
-          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/admin" element={<AdminPanel products={products} setProducts={setProducts} />} />
           <Route path="/track" element={<><Header theme={theme} toggleTheme={toggleTheme} /><TrackOrder /><Footer /></>} />
           <Route path="*" element={
             <>
               <Header theme={theme} toggleTheme={toggleTheme} />
               <button className="fixed top-4 right-20 bg-gold text-white px-4 py-2 rounded z-40" onClick={() => setIsCartOpen(true)}>Cart ({cart.length})</button>
               <main className="flex-grow max-w-7xl mx-auto px-4 py-8">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                   {products.map(p => <ProductCard key={p.id} product={p} onOrder={() => setIsCheckoutOpen(true)} onAddToCart={addToCart} />)}
                 </motion.div>
               </main>
