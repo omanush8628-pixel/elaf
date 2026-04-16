@@ -14,11 +14,12 @@ export default function Header({ theme, toggleTheme }: { theme: 'light' | 'dark'
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
           <Link to="/" className="flex items-center gap-3 text-xl font-black tracking-tighter">
+            <img src="https://i.postimg.cc/yNFhY61S/Screenshot-2026-04-01-193234.png" alt="Logo" className="h-10 w-10 object-cover rounded-full shadow-md" referrerPolicy="no-referrer" />
             <div className="flex items-center gap-1 font-sans">
               <span className="text-text-dark dark:text-white">Elaf</span> 
               <span className="text-gold">BD</span>
             </div>
-            <img src="https://i.postimg.cc/PJRkJy09/Screenshot-2026-04-01-193234-removebg-preview.png" alt="Logo" className="h-10 w-10 object-contain" referrerPolicy="no-referrer" />
+            <span className="text-text-dark dark:text-white hidden sm:inline">|</span>
             <div className="flex items-center gap-1 font-serif">
               <span className="text-text-dark dark:text-white">ইলাফ</span> 
               <span className="text-gold">বিডি</span>

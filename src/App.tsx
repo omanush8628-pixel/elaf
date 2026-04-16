@@ -39,21 +39,33 @@ export default function App() {
     setCart(prev => prev.map(i => i.product.id === productId ? {...i, quantity: Math.max(1, i.quantity + delta)} : i).filter(i => i.quantity > 0));
   };
 
-  const handleOrderSubmit = (data: any) => {
+  const handleOrderSubmit = async (data: any) => {
     const total = cart.reduce((acc, item) => acc + item.product.salePrice * item.quantity, 0);
-    const order = { ...data, cartItems: cart, totalPrice: total, id: Date.now().toString(), timestamp: new Date().toISOString(), status: 'Pending' };
+    const orderItemsString = cart.map(i => `${i.product.name} (x${i.quantity})`).join(', ');
+    const order = { ...data, customerName: data.name, cartItems: cart, totalPrice: total, id: Date.now().toString(), timestamp: new Date().toISOString(), status: 'Pending' };
+    
     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
     localStorage.setItem('orders', JSON.stringify([...orders, order]));
     
-    emailjs.send(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID || '',
-      import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '',
-      { cartItems: cart.map(i => i.product.name).join(', '), ...order },
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY || ''
-    ).then(() => alert('Order placed!'), () => alert('Email failed, order saved.'));
+    try {
+      await emailjs.send(
+        'service_47o06sb',
+        'template_vfse5sk',
+        { 
+           customer_name: order.customerName,
+           customer_phone: order.phone,
+           customer_address: order.address,
+           product_list: orderItemsString,
+           total_price: order.totalPrice,
+           payment_method: order.paymentMethod,
+        },
+        'Z5asZuHhFt_w0g-mY'
+      );
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
     
     setCart([]);
-    setIsCheckoutOpen(false);
   };
 
   return (
